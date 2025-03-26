@@ -1,0 +1,709 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{float}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={199 Report},
+  pdfauthor={Stephen Fujiwara},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{199 Report}
+\author{Stephen Fujiwara}
+\date{March 14, 2025}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}\label{introduction}
+
+In this analysis, we explore the extent to which well-known market
+effects from traditional financial markets, such as seasonality,
+momentum, mean-reversion, carry, etc. are present in the cryptocurrency
+markets. These phenomena have been well-documented in the more
+traditional financial markets, such as equities and fixed income, where
+they are leveraged in various trading strategies. However, the unique
+idiosyncrasies of crypto markets that separate them from traditional
+markets - such as their relatively young infrastructure,
+decentralization, volatility, the risk-appetite of customers - suggest
+that these effects may be exacerbated, behave differently, or perhaps
+fail to manifest altogether.
+
+Specifically, in this analysis, we investigate seasonality effects in
+cryptocurrency markets, focusing on patterns based on the day of the
+week and patterns based on the day of the month. Additionally, we
+examine the presence of trend effects and their potential role in price
+movements. Moreover, on top of conducting these investigations across an
+aggregate of cryptocurrencies, we also repeated each of these
+investigations specifically with Bitcoin. To conduct this analysis, we
+collected daily price data from the past 5 years from the top 50
+cryptocurrencies ranked by market capitalization using CoinGecko's API.
+CoinGecko is a provider of cryptocurrency data that offers detailed
+information across a wide range of coins in the cryptocurrency industry.
+The goal is to assess whether these phenomena hold relevance in the
+crypto space, and with these phenomena in mind, to identify unique
+patterns that could inform quantitative trading strategies in this asset
+class.
+
+\section{Data Overview, Collection,
+Pre-Processing}\label{data-overview-collection-pre-processing}
+
+The data consists of a single dataset. This dataset contains the daily
+prices, beginning on the 1st of January, 2020 to the 1st January, 2025,
+from the top 50 cryptocurrencies ranked by market capitalization on the
+date of collection.
+
+\subsection{Data Collection}\label{data-collection}
+
+The data for this analysis was collected via the CoinGecko API, which
+provides comprehensive, granular data on the cryptocurrency market.
+Initially, a request was made to retrieve the list of the top
+cryptocurrencies ranked by market capitalization. To ensure the
+relevance of the dataset and reduce redundancy, stablecoins -
+cryptocurrencies designed to maintain a stable value, and wrapped tokens
+- representations of other cryptocurrencies for trading at different
+venues - were filtered out. Following this, separate requests were made
+for each of the top 50 coins to obtain their daily closing prices over
+the past five years, alongside it's timestamp. The resulting time-series
+data for each asset was then merged using an outer join on the
+timestamp, to construct a single, comprehensive dataset suitable for
+analysis.
+
+\subsection{Data Pre-Processing}\label{data-pre-processing}
+
+To facilitate the analysis of market effects, the daily closing price
+data for each cryptocurrency is transformed into daily log returns.
+Logarithmic returns, defined as \(log(\frac{P_t}{P_{t-1}})\), are
+calculated for each timestamp, where \(P_t\) represents the closing
+price of the asset at time \(t\). This transformation is commonly used
+in analysis of financial markets because it produces returns that are
+time-additive, making it easier to model and plot. By using log returns,
+the analysis accounts for the effects of compounding, enabling a robust
+assessment of market dynamics.
+
+From the single, comprehensive dataset, we then construct a dataset
+comprising of the log returns of the top 50 cryptocurrencies in
+aggregate, where for each day, we take the average of the individuals
+log returns of each cryptocurrency and average them to a single value.
+This effectively serves as the dataset of the log returns of an
+equal-weighted average of the top 50 coins, providing a broader measure
+of market performance.
+
+Additionally, we create a separate dataset of Bitcoin's returns alone,
+isolating its returns from to evaluate it independently from the broader
+market. These smaller sets of data serve as the foundation for the
+subsequent seasonality and trend analysis.
+
+\section{Seasonality Analysis (Day of the
+Week)}\label{seasonality-analysis-day-of-the-week}
+
+\subsection{Aggregate (Equal-Weighted Top 50
+Index)}\label{aggregate-equal-weighted-top-50-index}
+
+\subsubsection{Visual Analysis}\label{visual-analysis}
+
+To assess whether cryptocurrency demonstrate systemic patterns across
+the days of the week, we analyze the aggregate time series by grouping
+daily log returns according to the day of the week. Initially, we
+compute the average log return for each day of the week and plot them
+alongside each other. Figure \textcolor{blue}{\ref{fig:1}} reveals a
+pronounced weekend effect, where there are strongly positive average
+returns on Saturday and Sunday, while the rest of the week appears
+noisy, with no clear pattern.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{figure1.png}
+    \caption{Mean Return of The Aggregate According to the Day of the Week}
+    \label{fig:1}
+\end{figure}
+
+To mitigate the influence of outliers, we complement this analysis by
+doing the same with the median log return of each day of the week. The
+median, here, can serve as a robust measure as it reduces the impact of
+very extreme values that could distort the general pattern. Figure
+\textcolor{blue}{\ref{fig:2}} confirms the weekend effect, showing that
+while all days of the week exhibit modestly positive returns, the
+weekend stands out with higher returns relative to the rest of the week,
+although not by a pronounced margin.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{figure2.png}
+    \caption{Median Return of The Aggregate According to the Day of the Week}
+    \label{fig:2}
+\end{figure}
+
+Given these simple visual tests, we fail to reject the idea that the
+returns according to the day of the week are purely random. Therefore,
+we continue on and construct a simple metric to quantify the weekend
+effect in a more explicit manner. The metric goes as such: for each
+week, we compute the difference between the sum of the returns of the
+weekend and the sum of the returns of the rest of the week. We then
+visualize this metric as a bar plot in Figure
+\textcolor{blue}{\ref{fig:3}}. There appear to be slightly more weeks
+where the metric is positive than it is negative, with the magnitudes
+distributed nearly symmetrically, but overall the results seem
+inconclusive.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{figure3.png}
+    \caption{Bar Chart of the Weekly Metric of The Aggregate}
+    \label{fig:3}
+\end{figure}
+
+To further evaluate this effect, we compute and plot the cumulative sum
+of this weekly metric over time, effectively simulating the performance
+of a strategy that seeks to exploit the weekend anomaly. Figure
+\textcolor{blue}{\ref{fig:4}} suggests that an account following the
+strategy from 2020 to 2025 would have approximately doubled in value in
+log return terms, translating to a 539\% increase in normal return
+terms; however, the path is highly volatile and noisy.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{figure4.png}
+    \caption{Cumulative Log Returns of a Simulated Day of the Week Seasonality Strategy on an Equal-Weighted Index of the Top 50 Coins ex. Transaction Costs, Slippage, etc.}
+    \label{fig:4}
+\end{figure}
+
+\subsubsection{Statistical Testing}\label{statistical-testing}
+
+Since our visual tests didn't outright reject the presence of the
+weekend effect, we proceed to formal statistical tests. To formally test
+whether the observed weekend effect is statistically significant, we
+conducted two non-parametric hypothesis tests: the Kruskal-Willis Test
+and a permutation test.
+
+The Kruskal-Willis test, a generalization of ANOVA, assesses whether
+samples originate from the same distribution without assuming normality.
+This test is particularly useful, since cryptocurrency returns may
+exhibit heavy tails. The Kruskal Willis test returns a p-value of 0.26,
+which at a significance level of 0.05 leads us to fail to reject the
+null, suggesting no strong evidence against purely random returns.
+
+We then perform a permutation test, shuffling the day of the week
+associated with the returns to produce a null distribution for the test
+statistics, defined as the difference in mean returns between the
+weekend and the rest of the week. Doing so allows us to investigate
+whether the observed weekend premium is likely to have been due to
+chance. The permutation test yields a p-value of 0.08, which, while
+lower than that of the Kruskal-Willis test, remains above the
+conventional significance level of 0.05, leading us to fail to reject
+the null hypothesis.
+
+While the weekend effects appears to be visually suggestive, our
+statistical tests do not provide sufficient evidence to conclude that it
+is a persistent, exploitable effect, and if it is, it is an effect
+subject to significant variability in outcome, and may take many years
+to realize it's expected returns.
+
+\subsection{Bitcoin}\label{bitcoin}
+
+\subsubsection{Visual Analysis}\label{visual-analysis-1}
+
+As in the previous analysis done with the aggregate, we examine the
+effect by grouping the returns of Bitcoin by the day of the week, and
+computing both the mean and median for each day. As Figure
+\textcolor{blue}{\ref{fig:5}} and Figure \textcolor{blue}{\ref{fig:6}}
+show, unlike the broader market's weekend effect, Bitcoin exhibits a
+different pattern: Mondays and Fridays show significantly lower returns
+relative to the rest of the week, where Fridays are strongly negative.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure5.png}
+        \caption{Mean Return of Bitcoin According to the Day of the Week}
+        \label{fig:5}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure6.png}
+        \caption{Median Return of Bitcoin According to the Day of the Week}
+        \label{fig:6}
+    \end{minipage}
+\end{figure}
+
+Given this observed idiosyncrasy, we construct a simple metric that
+captures the difference in the sum of the returns of the proposed
+stronger days and the sum of the returns of the weaker days. Much like
+in the previous analysis, the metric is slightly frequently positive
+than negative, and the magnitudes are about the same, but mostly
+inconclusive, as Figure \textcolor{blue}{\ref{fig:7}} demonstrates. When
+plotted cumulatively, Figure \textcolor{blue}{\ref{fig:8}} shows that
+metric suggests that an account following the strategy would have
+tripled in log return terms from 2020 to 2025, equating to a 1,908\%
+return, although with some variability.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure7.png}
+        \caption{Bar Chart of the Weekly Metric of Bitcoin}
+        \label{fig:7}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure8.png}
+        \caption{Cumulative Log Returns of a Simulated Day of the Week Seasonality Strategy on Bitcoin ex. Transaction Costs, Slippage, etc.}
+        \label{fig:8}
+    \end{minipage}
+\end{figure}
+
+\subsubsection{Statistical Testing}\label{statistical-testing-1}
+
+Performing the same tests as in the previous analysis, the
+Kruskal-Willis test produces a p-value of 0.62, and the permutation test
+returns a p-value of 0.09 - both failing to reject the null hypothesis
+at the significance level of 0.05. While it seems that behavior of the
+price movements of Bitcoin on a day of the week basis may be different
+than that of the broader market, our findings do not provide strong
+enough evidence to reject the proposition that it may simply be due to
+noise.
+
+\section{Seasonality Analysis (Day of the
+Month)}\label{seasonality-analysis-day-of-the-month}
+
+\subsection{Aggregate (Equal-Weighted Top 50
+Index)}\label{aggregate-equal-weighted-top-50-index-1}
+
+\subsubsection{Visual Analysis}\label{visual-analysis-2}
+
+To examine potential seasonality effects based on parts of the month, we
+begin by grouping daily log returns according to their calendar day and
+computing the mean return for each day. As Figure
+\textcolor{blue}{\ref{fig:9}} indicates, returns in the first and last
+week of the month were consistently positive, while the rest of the
+month exhibits considerable noise. We also compute the median returns
+grouped by day of the month as well, and as Figure
+\textcolor{blue}{\ref{fig:10}} reveals, interestingly, the median
+returns are mostly positive across the board. While it shows no clear
+pattern, it demonstrates an interesting characteristic of the daily
+returns, which is that they are skewed with a heavy left tail.
+
+\begin{figure}
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure5.png}
+        \caption{Mean Return of The Aggregate According to the Day of the Month}
+        \label{fig:9}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure6.png}
+        \caption{Median Return of The Aggregate According to the Day of the Month}
+        \label{fig:10}
+    \end{minipage}
+\end{figure}
+
+To further investigate, we repeat the computation of the mean return
+according to the day of the month, for each year of the past five years.
+This breakdown, demonstrated in Figure \textcolor{blue}{\ref{fig:11}},
+reveals a persistent effect: returns in the final five days of the month
+are consistently positive across all years, suggesting a month-end
+anomaly.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure11.png}
+    \caption{Breakdown by Year of the Mean Returns of The Aggregate According to the Day of the Month}
+    \label{fig:11}
+\end{figure}
+
+To quantify this effect, we define a simple monthly metric, computed as
+the sum of the log returns over the last five days of each month, and
+plot it as a bar plot. Figure \textcolor{blue}{\ref{fig:12}} shows this
+metric is slightly more frequently positive than negative, and the
+magnitudes are roughly balanced. As Figure
+\textcolor{blue}{\ref{fig:13}} indicates, a cumulative plot of this
+metric over time suggests that a strategy exclusively exploiting this
+pattern would have a cumulative log return of 0.9, translating to 146\%
+return in regular return terms (excluding transaction costs, slippage,
+etc.).
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure12.png}
+        \caption{Bar Chart of the Monthly Metric of The Aggregate}
+        \label{fig:12}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure13.png}
+        \caption{Cumulative Log Return of a Simulated Day of the Month Seasonality Strategy on an Equal-Weighted Index of the Top 50 Coins ex. Transaction Costs, Slippage, etc.}
+        \label{fig:13}
+    \end{minipage}
+\end{figure}
+
+\subsubsection{Statistical Testing}\label{statistical-testing-2}
+
+Moving beyond our visual analysis, which suggests an end-of-month
+effect, we move to statistical tests to formally assess the presence of
+this effect.
+
+A Kruskal-Willis test, which evaluates whether returns vary
+systematically across different days of the month, produces a p-value of
+0.31, suggesting no statistically significant differences. In addition,
+a permutation test, where we permute the day of the month corresponding
+to each return observation for each month, and compare against the
+observed test statistic of the difference in mean returns between the
+final days of the month and the rest of the month. This test yields a
+p-value of 0.43, failing to reject the null hypothesis, the assumption
+that returns on different days of the month are drawn from the same
+distribution, and that any observed patterns are likely due to chance.
+
+Although visually suggestive, there is not strong enough evidence to
+reject the assumption that this perceived pattern has arisen purely due
+to chance. Or, if the effect were to exist, it could simply be too weak
+and too noisy to detect given our sample size.
+
+\subsection{Bitcoin}\label{bitcoin-1}
+
+\subsubsection{Visual Analysis}\label{visual-analysis-3}
+
+As in our previous analysis of seasonality based on the day of the month
+with the equal-weighted aggregate, we conduct an analysis focusing
+solely on Bitcoin. We begin by grouping the log returns by the month and
+computing the mean. As Figure \textcolor{blue}{\ref{fig:14}} indicates,
+the returns at the end of the monthly are strongly positive, with the
+rest of the month exhibiting significant noise. As for the median,
+Figure \textcolor{blue}{\ref{fig:15}} demonstrates results that align
+very closely with that of the mean grouped by day of the month.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure14.png}
+        \caption{Mean Return of Bitcoin According to the Day of the Month}
+        \label{fig:14}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure15.png}
+        \caption{Median Return of Bitcoin According to the Day of the Month}
+        \label{fig:15}
+    \end{minipage}
+\end{figure}
+
+To determine it's persistence more granularly, we repeat the computation
+of the mean return for each day of the month for each year of the past
+five years. As Figure \textcolor{blue}{\ref{fig:16}} indicates, across
+all years, the last five days of the month exhibit consistently positive
+returns in each year, with the rest of the month showing no clear
+pattern.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure16.png}
+    \caption{Breakdown by Year of the Mean Returns of Bitcoin According to the Day of the Month}
+    \label{fig:16}
+\end{figure}
+
+Further analyzing this effect, we compute the metric utilized in the
+previous analysis, and plot it. According to Figure
+\textcolor{blue}{\ref{fig:17}}, the metric appears to be more frequently
+positive than negative, with similar magnitudes in both directions. A
+cumulative plot of this metric shows that a strategy based on exploiting
+this end-of-month effect would have achieved a cumulative log return of
+1, or a 172\% return over the period studied, as indicated in Figure
+\textcolor{blue}{\ref{fig:18}}.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure17.png}
+        \caption{Bar Chart of the Monthly Metric of Bitcoin}
+        \label{fig:17}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure18.png}
+        \caption{Cumulative Log Return of a Simulated Day of the Month Seasonality Strategy on Bitcoin ex. Transaction Costs, Slippage, etc.}
+        \label{fig:18}
+    \end{minipage}
+\end{figure}
+
+\subsubsection{Statistical Testing}\label{statistical-testing-3}
+
+Testing the statistical validity of this anomaly, a Kruskal-Willis test
+yields a p-value of 0.15, while a permutation test - structured the same
+way as in the previous analysis - yields a p-value of 0.23. As in the
+aggregate case, these results cause us to fail to reject the null
+hypothesis of non-seasonality.
+
+\section{Trend (Time-Series Momentum)
+Analysis}\label{trend-time-series-momentum-analysis}
+
+\subsection{Aggregate (Equal - Weighted Top 50
+Index)}\label{aggregate-equal---weighted-top-50-index}
+
+\subsubsection{Visual Analysis}\label{visual-analysis-4}
+
+To assess whether trend effects are present in the aggregate, we examine
+the cumulative log return over the past five years. Figure
+\textcolor{blue}{\ref{fig:19}} suggests periods of trending behavior,
+but further analysis is required.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure19.png}
+    \caption{Cumulative Log Returns of an Equal-Weighted Index of the Top 50 Coins from 2020 to 2025}
+    \label{fig:19}
+\end{figure}
+
+We then analyze the relationship between past and future returns by
+computing the average log return for each period in the dataset, where a
+period is defined as a series of days, and plotting it against the
+average return of the following period, along with a fitted regression
+line. Doing this for different period lengths (e.g.~1 day, 3 days, 5
+days, etc.). If returns exhibit trending behavior, we would expect a
+positive slope. As Figure \textcolor{blue}{\ref{fig:20}} indicates,
+there is a slightly negative slope for a 1-day period, a slightly
+positive slope for a 3-day period, and beginning with a 5-day period the
+slope increases up to when the period length reaches 20 days, before
+declining once again. This pattern visually suggests that returns may
+exhibit trending behavior over intermediate time horizons, though the
+effect weakens at longer horizons.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure20.png}
+    \caption{Plot of Previous Period's Mean Log Return against Next Period's Mean Log Return for Periods of lengths: 1 day, 3 days, 5 days, etc.}
+    \label{fig:20}
+\end{figure}
+
+To further investigate, we compute the autocorrelation function (ACF) of
+log returns up to a lag of 30 days. Figure
+\textcolor{blue}{\ref{fig:21}} shows that the ACF immediately drops
+close to zero after the first lag, indicating little persistence in
+returns. However, this result on it's own is not conclusive, as the ACF
+measures correlations at individual lags, but does not account for
+dependencies that may emerge jointly across multiple periods.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure21.png}
+    \caption{ACF (Autocorrelation Function) of The Aggregate}
+    \label{fig:21}
+\end{figure}
+
+\subsubsection{Statistical Testing}\label{statistical-testing-4}
+
+To statistically test for the presence of a trend effect, we conduct the
+Ljung-Box test on the log returns up to a lag of 30 days. This test
+examines whether the autocorrelations of a time series are jointly equal
+to zero. The results for this test yield p-values below starting at
+0.007 and decreasing to a minimum of 0.000169 at a lag of 25, before
+rising again. This suggests some degree of autocorrelation up to larger
+lags.
+
+We also fit an AR (AutoRegressive) model with up to 30 lags. An AR model
+models how past returns can predict future returns by expressing the
+return at time \(t\), \(r_t\), as a linear combination of previous
+return values \(r_{t-1}, r_{t-2}\) etc. The p-values of the estimated
+coefficients of this model vary widely, ranging from 0.01 to 0.98 with
+no discernible pattern - some lags exhibit statistical significance,
+while others do not, with no apparent relationship with respect to lag
+length. This lack of structure does not provide sufficient evidence to
+indicate the presence of a trend effect.
+
+While the analysis hints at the presence of trending behavior, the
+statistical evidence is not sufficient enough to support it. If trends
+exist in the broader market, they are weak, and dominated by noise.
+
+\subsection{Bitcoin}\label{bitcoin-2}
+
+\subsubsection{Visual Analysis}\label{visual-analysis-5}
+
+To examine whether Bitcoin exhibits trend effects, we conduct an
+analysis identical to that applied to the aggregate index. Plotting the
+cumulative log returns of Bitcoin over the past five years, visual
+inspection suggests the presence of trends, as Figure
+\textcolor{blue}{\ref{fig:22}} indicates.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure22.png}
+    \caption{Cumulative Log Returns of Bitcoin from 2020 to 2025}
+    \label{fig:22}
+\end{figure}
+
+Plotting the average log return for each period against the average log
+return of the next period and fitting a regression line, for periods up
+to 50 days, we see results similar to that of the aggregate. Figure
+\textcolor{blue}{\ref{fig:23}} shows that a 1-day period the slope is
+slightly negative, but as period lengths are increased, the slope
+increases just as well, peaking at a period length of 30 days, before
+declining again. This pattern suggests that returns exhibit trending
+behavior over intermediate timeframes, but weakens at much shorter or
+much longer timeframes, much like the aggregate.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure23.png}
+    \caption{Plot of Previous Period's Mean Log Return against Next Period's Mean Log Return for Periods of lengths: 1 day, 3 days, 5 days, etc.}
+    \label{fig:23}
+\end{figure}
+
+Examining further, we compute and plot the ACF (Figure
+\textcolor{blue}{\ref{fig:24}}). Similar to the aggregate, the
+autocorrelation drops to zero immediately after the first lag,
+suggesting little to no persistence in daily returns on the time scale
+we are investigating.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure24.png}
+    \caption{ACF (Autocorrelation Function) of Bitcoin}
+    \label{fig:24}
+\end{figure}
+
+\subsubsection{Statistical Testing}\label{statistical-testing-5}
+
+For a statistical test of trending behavior, we conduct a Ljung-Box test
+up to 50 lags. The results show a p-value of 0.058 at lag 1, 0.029 at
+lag 2, and 0.064 at lag 3. Beyond this, the p-values remain below the
+conventional significance level of 0.05, declining until lag 47, where
+they begin to increase noticably again.
+
+We further examine the presence of trend effects by fitting an AR model
+to Bitcoin's log returns. The resulting p-values range from as low as
+0.013 to as high as 0.936, without any discernible pattern - some lags
+may be statistically significant, but overall the significance does not
+systematically increase or decrease with lag length. This erratic
+distribution of p-values, indicate that any dependencies are
+inconsistent, and the returns do not follow a clear trend-based
+structure.
+
+While certain analyses may suggest the possibility of trending behavior
+over intermediate timeframes, the statistical evidence remains weak.
+These results align with those observed for the aggregate index, where
+if trend effects exist, they may not be strong enough to be exploited.
+
+\section{Discussion and Suggestions}\label{discussion-and-suggestions}
+
+Given the characteristics of cryptocurrency markets - such as their
+relative nascence, lower regulatory oversight, and high retail
+participation - one might expect these markets exhibit inefficiencies
+similar to those well-known in traditional financial markets, and
+potentially in a more pronounced manner. However, our analysis suggests
+that this may not be the case, at least for the market anomalies we
+specifically investigated.
+
+We examined seasonality effects based on both the day of the week as
+well as the day of the month, resulting in not sufficiently strong
+evidence to reject that any pattern may have been due to chance.
+Similarly, when investigating the presence of trend effects, we found
+mixed results. While visual inspection suggested some degree of trending
+behavior, statistical tests produced inconclusive results.
+
+It is important, however, for us to acknowledge the limitations of our
+study. First, we have a relatively small sample size of five years worth
+of daily price data. This data may reflect recent market dynamics, but
+it does not allow us to investigate inefficiencies on a much longer-term
+basis throughout cryptocurrency history. In addition, we focused our
+investigation on a specific set of well-documented market effects. There
+are numerous other inefficiencies that we did not explore, such as
+momentum effects at different time scales, cross-sectional effects such
+as size and low-volatility, or even inefficiencies unique to crypto -
+such as the structural inefficiencies related to funding rates and
+perpetual swap dynamics.
+
+Future research could extend this analysis in multiple ways. Expanding
+the dataset length to incorporate a more extensive history could provide
+a much stronger analysis of the inefficiencies we investigated, with a
+much larger sample size. Incorporating intra-day data might also reveal
+short-term inefficiencies that were masked on a daily timescale. In
+addition, expanding the scope of analysis to alternative inefficiencies
+- such as those related to cross-sectional factors, exchange-specific
+price deviations, or the impact of large liquidations, etc. - could
+provide a more comprehensive assessment of inefficiencies in the
+cryptocurrency markets and their similarities or lack thereof with the
+inefficiencies that exist in traditional financial markets.
+
+\section{Conclusion}\label{conclusion}
+
+Overall, while our findings suggest that certain well-known market
+inefficiencies may not be present in cryptocurrency markets as one might
+expect, this does not imply that inefficiencies are absent altogether.
+Rather, it suggests for further research to identify and understand the
+unique dynamics at play in these markets.
+
+\end{document}
